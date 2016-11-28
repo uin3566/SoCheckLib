@@ -1,4 +1,4 @@
-package com.fangxu.gradle.plugin
+package com.fangxu
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction

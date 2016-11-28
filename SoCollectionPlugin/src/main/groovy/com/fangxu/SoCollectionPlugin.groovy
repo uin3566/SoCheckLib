@@ -1,9 +1,9 @@
-package com.fangxu.gradle.plugin
+package com.fangxu
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-class SoCheckPlugin implements Plugin<Project> {
+class SoCollectionPlugin implements Plugin<Project> {
     static final String PLUGIN_NAME = "SoCheckPlugin"
 
     @Override

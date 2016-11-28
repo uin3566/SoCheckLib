@@ -1,0 +1,57 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+
+version = '1.0.1'
+group = 'com.fangxu'
+archivesBaseName = 'socollectionplugin'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.6"
+    }
+}
+
+apply plugin: "com.gradle.plugin-publish"
+
+pluginBundle {
+    website = 'http://www.gradle.org/'
+    vcsUrl = 'https://github.com/uin3566/SoCheckPlugin/tree/master/GroovyPlugin'
+    description = 'The plugin is used for android project.it is used for collect md5 of all of the dependent so files' +
+            'during the build process.then you can check md5 when user first start app after installation,if so damaged,' +
+            'then hint user to reinstall the apk.check code is written,you can get it from my Github:"https://github.com/uin3566/SoCheckPlugin"'
+    tags = ['greetings', 'salutations']
+
+    plugins {
+        SoCollectionPlugin {
+            id = 'com.fangxu.socollectionplugin'
+            displayName = 'So md5 collection plugin'
+        }
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+}
+
+compileGroovy {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.encoding = "UTF-8"
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: 'file:release/libs')
+    }
+}
