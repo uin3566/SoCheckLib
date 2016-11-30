@@ -1,6 +1,7 @@
 package com.fangxu
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.TaskAction
 
 import java.security.MessageDigest
@@ -19,12 +20,20 @@ class Md5Task extends DefaultTask {
     }
 
     def writeMd5JsonToFile() {
-        String json = generateJsonString()
+        def json = generateJsonString()
         println json
-        String path = project.extensions.getByType(SoCheckPluginExtension.class).md5Path
-        File file = new File(path);
-        file.write(json)
-        println file.text
+        def container = project.extensions.getByType(SoCheckPluginExtension.class)
+        container.flavors.each {
+            flavor ->
+                container.types.each {
+                    type ->
+                        def tmpVariant = flavor + type
+                        def path = project.projectDir.absolutePath + '/src/main/assets/' + tmpVariant + 'md5.txt'
+                        def file = new File(path);
+                        file.write(json)
+                        println file.text
+                }
+        }
     }
 
     def String generateJsonString() {
@@ -43,13 +52,31 @@ class Md5Task extends DefaultTask {
     }
 
     def getAllSoFiles() {
-        String path = project.extensions.getByType(SoCheckPluginExtension.class).soPath
-        File file = new File(path)
-        File[] files = file.listFiles()
-        files.each {
-            File f ->
-                println f.absolutePath
-                soList.add(f)
+        def container = project.extensions.getByType(SoCheckPluginExtension.class)
+        def soPath
+        def tmpVariant
+        container.flavors.each {
+            flavor ->
+                container.types.each {
+                    type ->
+                        tmpVariant = flavor + '/' + type
+                        soPath = project.buildDir.absolutePath + '/intermediates/transforms/mergeJniLibs/' + tmpVariant + '/folders/2000/1f/main/lib/armeabi-v7a/'
+                        println tmpVariant
+                        println soPath
+                        File file = new File(soPath)
+                        if (file.exists() && file.isDirectory()) {
+                            println 'file exists and is dir'
+                            File[] files = file.listFiles()
+                            if (files.length > 0) {
+                                println 'begin add so path'
+                                files.each {
+                                    File f ->
+                                        println f.absolutePath
+                                        soList.add(f)
+                                }
+                            }
+                        }
+                }
         }
     }
 
