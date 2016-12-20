@@ -23,18 +23,13 @@ class Md5Task extends DefaultTask {
         def json = generateJsonString()
         println json
         def container = project.extensions.getByType(SoCheckPluginExtension.class)
-        container.flavors.each {
-            flavor ->
-                container.types.each {
-                    type ->
-                        def tmpVariant = flavor + type
-                        def path = project.projectDir.absolutePath + '/src/main/assets/' + tmpVariant + 'md5.txt'
-                        def file = new File(path);
-                        file.write(json)
-                        println file.text
-                }
-        }
+        def tmpVariant = container.flavor + container.type
+        def path = project.projectDir.absolutePath + '/src/main/assets/' + tmpVariant + 'md5.txt'
+        def file = new File(path);
+        file.write(json)
+        println file.text
     }
+
 
     def String generateJsonString() {
         String json;
@@ -55,28 +50,22 @@ class Md5Task extends DefaultTask {
         def container = project.extensions.getByType(SoCheckPluginExtension.class)
         def soPath
         def tmpVariant
-        container.flavors.each {
-            flavor ->
-                container.types.each {
-                    type ->
-                        tmpVariant = flavor + '/' + type
-                        soPath = project.buildDir.absolutePath + '/intermediates/transforms/mergeJniLibs/' + tmpVariant + '/folders/2000/1f/main/lib/armeabi-v7a/'
-                        println tmpVariant
-                        println soPath
-                        File file = new File(soPath)
-                        if (file.exists() && file.isDirectory()) {
-                            println 'file exists and is dir'
-                            File[] files = file.listFiles()
-                            if (files.length > 0) {
-                                println 'begin add so path'
-                                files.each {
-                                    File f ->
-                                        println f.absolutePath
-                                        soList.add(f)
-                                }
-                            }
-                        }
+        tmpVariant = container.flavor + '/' + container.type
+        soPath = project.buildDir.absolutePath + '/intermediates/transforms/mergeJniLibs/' + tmpVariant + '/folders/2000/1f/main/lib/armeabi-v7a/'
+        println tmpVariant
+        println soPath
+        File file = new File(soPath)
+        if (file.exists() && file.isDirectory()) {
+            println 'file exists and is dir'
+            File[] files = file.listFiles()
+            if (files.length > 0) {
+                println 'begin add so path'
+                files.each {
+                    File f ->
+                        println f.absolutePath
+                        soList.add(f)
                 }
+            }
         }
     }
 
@@ -99,5 +88,5 @@ class Md5Task extends DefaultTask {
         }
         return returnVal.toLowerCase();
     }
-}
 
+}

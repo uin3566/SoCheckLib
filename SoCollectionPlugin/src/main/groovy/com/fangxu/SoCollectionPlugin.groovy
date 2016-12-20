@@ -22,21 +22,15 @@ class SoCollectionPlugin implements Plugin<Project> {
         def tmpVariant
 
         project.afterEvaluate {
-            container.flavors.each {
-                flavor ->
-                    container.types.each {
-                        type ->
-                            tmpFlavor = flavor.substring(0, 1).toUpperCase().concat(flavor.substring(1))
-                            tmpType = type.substring(0, 1).toUpperCase().concat(type.substring(1))
-                            tmpVariant = tmpFlavor.concat(tmpType)
-                            mergeAssetsTaskName = 'merge' + tmpVariant + 'Assets'
-                            mergeJniTaskName = 'transformNative_libsWithMergeJniLibsFor' + tmpVariant
-                            println mergeAssetsTaskName
-                            println mergeJniTaskName
-                            project.tasks.getByName mergeAssetsTaskName dependsOn md5
-                            md5.dependsOn mergeJniTaskName
-                    }
-            }
+            tmpFlavor = container.flavor.substring(0, 1).toUpperCase().concat(container.flavor.substring(1))
+            tmpType = container.type.substring(0, 1).toUpperCase().concat(container.type.substring(1))
+            tmpVariant = tmpFlavor.concat(tmpType)
+            mergeAssetsTaskName = 'merge' + tmpVariant + 'Assets'
+            mergeJniTaskName = 'transformNative_libsWithMergeJniLibsFor' + tmpVariant
+            println mergeAssetsTaskName
+            println mergeJniTaskName
+            project.tasks.getByName mergeAssetsTaskName dependsOn md5
+            md5.dependsOn mergeJniTaskName
         }
     }
 }

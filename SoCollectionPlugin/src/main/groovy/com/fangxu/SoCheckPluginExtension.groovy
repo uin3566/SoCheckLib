@@ -1,6 +1,6 @@
 package com.fangxu
 
 class SoCheckPluginExtension {
-    String[] flavors
-    String[] types
+    String flavor
+    String type
 }
