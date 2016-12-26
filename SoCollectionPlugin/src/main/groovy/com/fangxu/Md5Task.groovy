@@ -13,8 +13,11 @@ class Md5Task extends DefaultTask {
     def MessageDigest messagedigest = MessageDigest.getInstance("MD5")
     def md5Map = [:]
 
+    String flavor, type
+
     @TaskAction
     def generateMd5s() {
+        getFlavorAndType()
         storeMd5ToMap()
         writeMd5JsonToFile()
     }
@@ -22,9 +25,7 @@ class Md5Task extends DefaultTask {
     def writeMd5JsonToFile() {
         def json = generateJsonString()
         println json
-        def container = project.extensions.getByType(SoCheckPluginExtension.class)
-        def tmpVariant = container.flavor + container.type
-        def path = project.projectDir.absolutePath + '/src/main/assets/' + tmpVariant + 'md5.txt'
+        def path = project.projectDir.absolutePath + '/src/main/assets/' + getFlavorType().toLowerCase() + 'md5.txt'
         def file = new File(path);
         file.write(json)
         println file.text
@@ -46,13 +47,31 @@ class Md5Task extends DefaultTask {
         }
     }
 
+    def getFlavorType() {
+        def index = name.indexOf('_') + 1
+        return name.substring(index)
+    }
+
+    def getFlavorAndType() {
+        def flavorType = getFlavorType()
+        def dirPath = project.buildDir.absolutePath + '/intermediates/transforms/mergeJniLibs/'
+        def newDirPath
+        for (int i = 1; i <= flavorType.length(); i++) {
+            flavor = flavorType.substring(0, i);
+            newDirPath = dirPath + flavor;
+            File file = new File(newDirPath)
+            if (file.exists() && file.isDirectory()) {
+                type = flavorType.substring(i, flavorType.length())
+                break;
+            }
+        }
+
+        println flavor + "," + type
+    }
+
     def getAllSoFiles() {
-        def container = project.extensions.getByType(SoCheckPluginExtension.class)
         def soPath
-        def tmpVariant
-        tmpVariant = container.flavor + '/' + container.type
-        soPath = project.buildDir.absolutePath + '/intermediates/transforms/mergeJniLibs/' + tmpVariant + '/folders/2000/1f/main/lib/armeabi-v7a/'
-        println tmpVariant
+        soPath = project.buildDir.absolutePath + '/intermediates/transforms/mergeJniLibs/' + flavor.toLowerCase() + '/' + type.toLowerCase() + '/folders/2000/1f/main/lib/armeabi-v7a/'
         println soPath
         File file = new File(soPath)
         if (file.exists() && file.isDirectory()) {
