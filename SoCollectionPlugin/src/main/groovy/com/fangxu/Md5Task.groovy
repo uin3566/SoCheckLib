@@ -13,7 +13,7 @@ class Md5Task extends DefaultTask {
     def MessageDigest messagedigest = MessageDigest.getInstance("MD5")
     def md5Map = [:]
 
-    String flavor, type
+    String flavor = "", type = ""
 
     @TaskAction
     def generateMd5s() {
@@ -58,7 +58,7 @@ class Md5Task extends DefaultTask {
         def newDirPath
         for (int i = 1; i <= flavorType.length(); i++) {
             flavor = flavorType.substring(0, i);
-            newDirPath = dirPath + flavor;
+            newDirPath = dirPath + flavor.toLowerCase();
             File file = new File(newDirPath)
             if (file.exists() && file.isDirectory()) {
                 type = flavorType.substring(i, flavorType.length())
