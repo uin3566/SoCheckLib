@@ -16,15 +16,15 @@ import java.util.Map;
 
 public class SoChecker {
     private static final String TAG = "SoChecker";
+    private static final String PREFERENCE_NAME = "shared_pref_config";
+    private static final String SO_MD5_CHECKED_VERSION = "so_md5_checked_version";
+    private static final String SO_FILE_DAMAGED = "so_file_damaged";
+
     private boolean isGetFileMd5Exception = false;
     private Context context;
     private SharedPrefUtil sharedPref;
 
-    private String configKey;
-    public static final String SO_MD5_CHECKED = "so_md5_checked";
-
     private SoChecker() {
-        configKey = SO_MD5_CHECKED;
     }
 
     private static class Holder {
@@ -35,33 +35,29 @@ public class SoChecker {
         return Holder.instance;
     }
 
-    public void init(Context context, String sharedPreferencesConfigFileName) {
+    public void init(Context context) {
         this.context = context.getApplicationContext();
-        sharedPref = new SharedPrefUtil(context, sharedPreferencesConfigFileName);
+        sharedPref = new SharedPrefUtil(context, PREFERENCE_NAME);
     }
 
-    public void setConfigKey(String configKey) {
-        this.configKey = configKey;
-    }
-
-    public boolean checkMd5(String currentVersion, String md5FileName) {
+    public boolean checkMd5(String currentVersion) {
         if (isMd5Checked(currentVersion)) {
             Log.i(TAG, "md5 has checked before");
             return true;
         }
 
-        //计算所有so的md5并将计算结果写入配置
-        return writeConfig(currentVersion, md5FileName);
+        //get all so md5s and write the config
+        return writeConfig(currentVersion);
     }
 
     private boolean isMd5Checked(String currentVersion) {
-        String appVersion = sharedPref.getConfig(configKey);
-        return appVersion.equals(currentVersion);
+        String oldVersion = sharedPref.getStringConfig(SO_MD5_CHECKED_VERSION);
+        return oldVersion.equals(currentVersion);
     }
 
-    private boolean writeConfig(String currentVersion, String md5FileName) {
+    private boolean writeConfig(String currentVersion) {
         long startTime = System.currentTimeMillis();
-        Map<String, String> calculatedMd5s = getCalculatedMd5s(md5FileName);
+        Map<String, String> calculatedMd5s = getCalculatedMd5s();
         Log.i(TAG, "read calculated md5 consume " + (System.currentTimeMillis() - startTime) + "ms");
         Map<String, String> currentMd5s = getCurrentMd5s();
         Log.i(TAG, "calculate apk so md5 consume " + (System.currentTimeMillis() - startTime) + "ms");
@@ -73,6 +69,7 @@ public class SoChecker {
 
         if (currentMd5s.size() != calculatedMd5s.size()) {
             Log.i(TAG, "the numbers of so in setup apk is not correct, setup not fully");
+            sharedPref.setBooleanConfig(SO_FILE_DAMAGED, true);
             return false;
         }
 
@@ -93,7 +90,10 @@ public class SoChecker {
         }
 
         if (result) {
-            sharedPref.writeConfig(configKey, currentVersion);
+            sharedPref.setStringConfig(SO_MD5_CHECKED_VERSION, currentVersion);
+            sharedPref.setBooleanConfig(SO_FILE_DAMAGED, false);
+        } else {
+            sharedPref.setBooleanConfig(SO_FILE_DAMAGED, true);
         }
 
         Log.i(TAG, "compare md5 consume " + (System.currentTimeMillis() - startTime) + "ms");
@@ -101,12 +101,14 @@ public class SoChecker {
         return result;
     }
 
-    //获得构建时的md5
-    private Map<String, String> getCalculatedMd5s(String md5FileName) {
+    //get so md5s in md5 file that generated during apk build
+    private Map<String, String> getCalculatedMd5s() {
         StringBuilder buffer = null;
         InputStream inputStream = null;
         BufferedReader reader = null;
         try {
+            String md5FileName = BuildConfig.FLAVOR + BuildConfig.BUILD_TYPE + "md5.txt";
+            Log.i(TAG, "md5 file name " + md5FileName);
             inputStream = context.getAssets().open(md5FileName);
             reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -131,11 +133,17 @@ public class SoChecker {
             }
         }
 
-        String json = buffer.toString();
-        return (Map<String, String>) JSON.parse(json);
+        try {
+            String json = buffer.toString();
+            return (Map<String, String>) JSON.parse(json);
+        } catch (Exception e) {
+
+        }
+
+        return null;
     }
 
-    //获得安装后的md5
+    //get so md5s during runtime after installed
     private Map<String, String> getCurrentMd5s() {
         String libraryPath = context.getApplicationInfo().dataDir + File.separator + "lib";
         File file = new File(libraryPath);

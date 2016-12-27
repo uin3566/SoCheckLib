@@ -13,11 +13,19 @@ public class SharedPrefUtil {
         sp = context.getSharedPreferences(configFileName, Context.MODE_PRIVATE);
     }
 
-    public void writeConfig(String key, String value) {
+    public void setStringConfig(String key, String value) {
         sp.edit().putString(key, value).commit();
     }
 
-    public String getConfig(String key) {
+    public String getStringConfig(String key) {
         return sp.getString(key, "");
+    }
+
+    public void setBooleanConfig(String key, boolean value) {
+        sp.edit().putBoolean(key, value).commit();
+    }
+
+    public boolean getBooleanConfig(String key) {
+        return sp.getBoolean(key, false);
     }
 }
